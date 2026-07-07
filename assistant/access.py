@@ -1,16 +1,20 @@
-from assistant.llm import complete_text
+import os
 
-_SYSTEM = (
-    "You decide whether a team is allowed to open a document in a shared "
-    "document system. Teams should only open documents that belong to them. "
-    "Answer with a single word, either ALLOW or DENY."
-)
+from config import BASE_DIR, DATA_DIR
 
 
+# Review: definitely not relying on an LLM decision for granting access
+# Instead, we check with code if the document path is within the team's directory
 def can_access(team, doc_path):
-    prompt = "Team: %s\nDocument path: %s\nShould this team be allowed to open it?" % (
-        team,
-        doc_path,
-    )
-    verdict = complete_text(_SYSTEM, [{"role": "user", "content": prompt}])
-    return "ALLOW" in verdict.upper()
+    if not team or not doc_path:
+        return False
+
+    team_dir = os.path.realpath(os.path.join(DATA_DIR, team))
+    if (
+        os.path.dirname(team_dir) != os.path.realpath(DATA_DIR)
+        or not os.path.isdir(team_dir)
+    ):
+        return False
+
+    candidate = os.path.realpath(os.path.join(BASE_DIR, doc_path))
+    return candidate == team_dir or candidate.startswith(team_dir + os.sep)
