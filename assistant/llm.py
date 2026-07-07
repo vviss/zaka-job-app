@@ -10,16 +10,11 @@ _client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
 
 def complete(system, messages, tools=None):
     full_messages = [{"role": "system", "content": system}] + messages
-    payload = {
-        "model": MODEL,
-        "max_tokens": MAX_TOKENS,
-        "messages": full_messages,
-        "headers": {"Authorization": "Bearer %s" % LLM_API_KEY},
-    }
-    if tools:
-        payload["tools"] = tools
 
-    log_request("llm", payload)
+    # Review: don't include the API key in the payload
+    # because it's a security risk to output it in the logs
+    # and the chat completion API does not use it anyway (already included in the client)
+    # Plus the objects 'payload' and 'kwargs' are almost duplicates
 
     kwargs = {
         "model": MODEL,
@@ -28,6 +23,8 @@ def complete(system, messages, tools=None):
     }
     if tools:
         kwargs["tools"] = tools
+
+    log_request("llm", kwargs)
 
     while True:
         try:
