@@ -6,8 +6,14 @@ import tempfile
 _CACHE_PATH = os.path.join(tempfile.gettempdir(), "dra_answer_cache.json")
 
 
-def _key(question):
-    normalized = question.strip().lower()
+
+def _key(team, question):
+    # Review: add team to the key to avoid collisions between teams 
+    # (ie. when I ask the same question but with a different team, I still get the cached answer from before)
+    normalized = team.strip().lower()
+    normalized += ":"
+    normalized += question.strip().lower()
+
     return hashlib.md5(normalized.encode("utf-8")).hexdigest()
 
 
@@ -27,11 +33,11 @@ def _save(store):
         pass
 
 
-def get(question):
-    return _load().get(_key(question))
+def get(team, question):
+    return _load().get(_key(team ,question))
 
 
-def put(question, answer):
+def put(team, question, answer):
     store = _load()
-    store[_key(question)] = answer
+    store[_key(team, question)] = answer
     _save(store)

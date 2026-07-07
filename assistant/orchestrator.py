@@ -9,7 +9,7 @@ def _parse_steps(plan):
 
 
 def answer_question(team, question):
-    cached = cache.get(question)
+    cached = cache.get(team, question)
     if cached is not None:
         return cached
 
@@ -20,5 +20,5 @@ def answer_question(team, question):
     findings = researcher.research(team, research_query)
     answer = writer.write(question, findings["notes"], findings["sources"])
 
-    cache.put(question, answer)
+    cache.put(team, question, answer)
     return answer

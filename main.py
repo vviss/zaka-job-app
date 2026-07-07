@@ -9,7 +9,10 @@ def main():
     parser.add_argument("--question", required=True)
     args = parser.parse_args()
 
-    print(answer_question(args.team, args.question))
+    try:
+        print(answer_question(args.team, args.question))
+    except ValueError as exc:
+        parser.error(str(exc))
 
 
 if __name__ == "__main__":
