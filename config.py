@@ -14,7 +14,8 @@ SEARCH_API_KEY = os.environ.get("SEARCH_API_KEY", "")
 
 MAX_TOKENS = 1024
 
-LOG_LEVEL = os.environ.get("LOG_LEVEL", "DEBUG")
+# Review: default to INFO, not DEBUG, so request payloads aren't dumped to logs
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
