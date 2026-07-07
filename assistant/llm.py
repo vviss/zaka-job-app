@@ -7,6 +7,8 @@ from assistant.logging_util import log_request, log_error
 
 _client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
 
+MAX_RETRIES = 3
+
 
 def complete(system, messages, tools=None):
     full_messages = [{"role": "system", "content": system}] + messages
@@ -26,12 +28,15 @@ def complete(system, messages, tools=None):
 
     log_request("llm", kwargs)
 
-    while True:
+    # Review: possible infinite loop
+    # Also the error is logged but not re-raised
+    for attempt in range(MAX_RETRIES):
         try:
             return _client.chat.completions.create(**kwargs)
         except APIStatusError as exc:
+            if attempt == MAX_RETRIES - 1:
+                raise
             log_error("model call failed, retrying: %s" % exc)
-            continue
 
 
 def complete_text(system, messages):
@@ -40,11 +45,14 @@ def complete_text(system, messages):
 
 
 def complete_json(system, messages):
-    # The model occasionally wraps JSON in prose. This guard keeps the
-    # downstream parse stable by retrying until the payload is valid.
-    while True:
+    # Review: possible infinite loop
+    # Also the error is neither logged nor raised
+    for attempt in range(MAX_RETRIES):
         text = complete_text(system, messages)
         try:
             return json.loads(text)
         except json.JSONDecodeError:
-            continue
+            if attempt == MAX_RETRIES - 1:
+                error = "model did not return valid JSON"                
+                log_error(error)
+                raise ValueError(error)
