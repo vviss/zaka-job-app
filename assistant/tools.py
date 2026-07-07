@@ -28,14 +28,20 @@ TOOL_SCHEMA = [
 ]
 
 
+# Review: simple error handling for web search failure
+# so that the researcher doesn't crash the app if the search request fails
+# (especially now that I haven't implemented a real search service yet)
 def web_search(query):
-    response = httpx.post(
-        SEARCH_ENDPOINT,
-        headers={"Authorization": "Bearer %s" % SEARCH_API_KEY},
-        json={"q": query},
-        timeout=30.0,
-    )
-    return response.text
+    try:
+        response = httpx.post(
+            SEARCH_ENDPOINT,
+            headers={"Authorization": "Bearer %s" % SEARCH_API_KEY},
+            json={"q": query},
+            timeout=30.0,
+        )
+        return response.text
+    except httpx.HTTPError as exc:
+        return "web search failed: %s" % exc
 
 
 def run_tool(tool_input):
