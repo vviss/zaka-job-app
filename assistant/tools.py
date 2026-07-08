@@ -48,7 +48,8 @@ def run_tool(tool_input):
     action = tool_input.get("action")
     args = tool_input.get("args", {})
 
-    if action == "list":
+    if action == "list_dir":
+        # Review: there's "list_dir" in the tools schema, not "list"
         return mcp_client.call_tool("list_dir", {"path": args.get("path", "")})
     if action == "read_file":
         return mcp_client.call_tool("read_file", {"path": args.get("path", "")})
