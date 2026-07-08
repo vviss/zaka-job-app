@@ -18,7 +18,11 @@ _SYSTEM = (
 def _preview(chunks):
     if not chunks:
         return "(no matching documents found)"
-    return "\n".join("- %s: %s" % (c["source"], c["text"][:120]) for c in chunks)
+    # Review: drop [:120] truncation per chunck because it's giving lots of false negatives
+    # (the answers are sometimes in the truncated parts)
+    # Not sure of this change because it costs more LLM tokens but I see better results
+    # TODO Wissam: double-check this again later
+    return "\n".join("- %s: %s" % (c["source"], c["text"]) for c in chunks)
 
 
 def _run_tool_call(team, tool_input, used):
