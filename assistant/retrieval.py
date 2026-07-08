@@ -12,8 +12,10 @@ _STOPWORDS = {
 }
 
 
+# Review: regex matching on a-z only is ignoring arabic text
+# (I wasn't able to get answers matching the Arabic in the bilingual file)
 def _terms(text):
-    words = re.findall(r"[a-z0-9]+", text.lower())
+    words = re.findall(r"\w+", text.lower())
     return set(word for word in words if word not in _STOPWORDS)
 
 
