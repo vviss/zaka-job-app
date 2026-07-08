@@ -20,7 +20,12 @@ def _terms(text):
 
 
 def _score(query_terms, chunk_text):
-    return len(query_terms & _terms(chunk_text))
+    # Review: normalize proportionally to the chunk's term count 
+    # (so a long chunk doesn't rank high just because it contains more words)
+    chunk_terms = _terms(chunk_text)
+    if not chunk_terms:
+        return 0 # To avoid division by 0
+    return len(query_terms & chunk_terms) / len(chunk_terms)
 
 
 def retrieve(team, question):

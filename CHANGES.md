@@ -53,6 +53,12 @@ Switched to a more general `\w+`.
 Documents were sliced into fixed 500-character pieces, which split sentences and also tables like the Q3 headcount into different chunks.
 Now it splits on paragraphs (blank lines) and includes whole paragraphs up to the size limit, with a one-paragraph overlap so that paragraphs related in meaning stay somehow connected (ie. not discarded as being irrelevant).
 
+**Retrieval scoring was biased toward long chunks.**
+The score was just the count of matching words, so a longer chunk could rank higher simply because it has more words (more chances to match), not because it's actually more relevant.
+Now the score is normalized by the chunk's term count (a density of matches instead of a raw count).
+
+Note: Before I'd changed the chunking from fixed-size pieces to splitting by paragraphs, this wasn't an issue since all chuncks were equal. But with my current approach, I think it's a better practice (even though for our specific dataset I didn't feel much improvements).
+
 **The researcher only saw a 120-char preview of each chunk.**
 The preview shown to the researcher was truncated to 120 chars, so the answer was often not in the context it saw (it could still open the file, but most of the times chose not to).
 Dropped the truncation: it costs a few more tokens but the results are clearly better.
