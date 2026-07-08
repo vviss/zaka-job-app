@@ -14,9 +14,25 @@ def _normalize(text):
 
 
 def _split(text):
+    # Review: group whole paragraphs (split on blank lines) into chunks up to
+    # CHUNK_SIZE instead of slicing every 500 chars, so we don't cut mid-sentence
     chunks = []
-    for start in range(0, len(text), CHUNK_SIZE):
-        chunks.append(text[start:start + CHUNK_SIZE])
+    current = ""
+    prev = ""
+    for paragraph in re.split(r"\n\s*\n", text):
+        paragraph = _normalize(paragraph)
+
+        if not paragraph:
+            continue
+        if current and len(current) + len(paragraph) > CHUNK_SIZE:
+            chunks.append(current)
+            current = prev
+            # Review: adding the previous paragraph as overlap to the next chunk
+            # It may be overkill for the current dataset but it gave better results
+        current = (current + " " + paragraph).strip()
+        prev = paragraph
+    if current:
+        chunks.append(current)
     return chunks
 
 
@@ -49,7 +65,7 @@ def load_team_chunks(team):
         if not name.endswith((".md", ".txt")):
             continue
         raw = _read(os.path.join(team_dir, name))
-        normalized = _normalize(raw)
-        for piece in _split(normalized):
+        # Review: removed _normalize() from here, doing it inside _split() now
+        for piece in _split(raw):
             chunks.append({"source": name, "text": piece})
     return chunks
