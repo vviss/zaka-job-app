@@ -28,13 +28,17 @@ def _preview(chunks):
 def _run_tool_call(team, tool_input, used):
     action = (tool_input or {}).get("action")
     args = (tool_input or {}).get("args", {})
-    if action == "read_file":
+    
+    # Review: add "list_dir" to the security gating
+    # because it's also a "read" of the system files
+    if action in ("read_file", "list_dir"):
         path = args.get("path", "")
         if not can_access(team, path):
             return "access denied"
-        name = path.rstrip("/").split("/")[-1]
-        if name and name not in used:
-            used.append(name)
+        if action == "read_file":
+            name = path.rstrip("/").split("/")[-1]
+            if name and name not in used:
+                used.append(name)
     result = tools.run_tool(tool_input)
     if not isinstance(result, str):
         result = json.dumps(result, default=str)
