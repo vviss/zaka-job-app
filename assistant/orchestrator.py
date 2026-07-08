@@ -13,11 +13,12 @@ def answer_question(team, question):
     if cached is not None:
         return cached
 
+    # Review: the logic was only giving the first step (steps[0]) as research_query
+    # which not only is lacking the full picture, 
+    # but also sometimes contains zero context about the original question
     plan = planner.make_plan(question)
     steps = _parse_steps(plan)
-    research_query = steps[0] if steps else question
-
-    findings = researcher.research(team, research_query)
+    findings = researcher.research(team, question, steps)
     answer = writer.write(question, findings["notes"], findings["sources"])
 
     cache.put(team, question, answer)

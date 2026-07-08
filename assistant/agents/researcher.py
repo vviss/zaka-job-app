@@ -28,7 +28,6 @@ def _preview(chunks):
 def _run_tool_call(team, tool_input, used):
     action = (tool_input or {}).get("action")
     args = (tool_input or {}).get("args", {})
-    
     # Review: add "list_dir" to the security gating
     # because it's also a "read" of the system files
     if action in ("read_file", "list_dir"):
@@ -45,12 +44,20 @@ def _run_tool_call(team, tool_input, used):
     return result
 
 
-def research(team, question):
+def research(team, question, steps=None):
     chunks = retrieve(team, question)
     system = _SYSTEM.format(team=team)
+
+    # Review: include the plan (formatted as a numbered list) in the prompt
+    plan = ""
+    if steps:
+        plan = "Plan of action:\n" + "\n".join(
+            "%d. %s" % (i + 1, step) for i, step in enumerate(steps)
+        ) + "\n\n"
     prompt = (
-        "Question: %s\n\nTop matching snippets from the %s document set:\n%s\n\n"
-        "Open whichever document you need and answer." % (question, team, _preview(chunks))
+        "Question: %s\n\n%sTop matching snippets from the %s document set:\n%s\n\n"
+        "Open whichever document you need and answer."
+        % (question, plan, team, _preview(chunks))
     )
     messages = [{"role": "user", "content": prompt}]
     used = []
