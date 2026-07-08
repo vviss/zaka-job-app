@@ -1,5 +1,7 @@
 import json
+import os
 
+from config import BASE_DIR
 from assistant.llm import complete, complete_text
 from assistant.retrieval import retrieve
 from assistant.access import can_access
@@ -34,10 +36,14 @@ def _run_tool_call(team, tool_input, used):
         path = args.get("path", "")
         if not can_access(team, path):
             return "access denied"
+        # Review: only count a doc as a source if the file actually exists.
+        # (To avoid citing a hallucinated/missing/failed file)
         if action == "read_file":
-            name = path.rstrip("/").split("/")[-1]
-            if name and name not in used:
+            target = os.path.realpath(os.path.join(BASE_DIR, path))
+            name = os.path.basename(target)
+            if os.path.isfile(target) and name not in used:
                 used.append(name)
+
     result = tools.run_tool(tool_input)
     if not isinstance(result, str):
         result = json.dumps(result, default=str)

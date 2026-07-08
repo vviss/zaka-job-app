@@ -62,6 +62,11 @@ The prompt said "answer using your knowledge and the following context", which c
 (it once cited "job_description.md" when asked about the tasks of a new engineer, this file doesn't exist in the data).
 We now give it deterministic sources from previous steps, and we ask it explicitly in the prompt to not rely on its own knowledge as fallback.
 
+**Citation sources could include files that were never actually read.**
+The researcher added a file to the sources as soon as the model asked to read it, _before_ the read actually ran.
+So if the model guessed a filename that doesn't exist (but is inside the team folder, so it passes the access check), it still ended up cited even though the read failed.
+Now a file is only added to the sources if it actually exists on disk, so a missing/hallucinated file never gets cited.
+
 **Only the first plan step was used, and it hid the real user's question.**
 The orchestrator ran the planner, then passed only `steps[0]` to the researcher as the search query.
 So the researcher _and retrieval_ worked off just the first step of the plan instead of the full plan.
