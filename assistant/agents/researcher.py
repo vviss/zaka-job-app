@@ -51,34 +51,39 @@ def research(team, question):
     messages = [{"role": "user", "content": prompt}]
     used = []
 
-    response = complete(system, messages, tools=tools.TOOL_SCHEMA)
-    message = response.choices[0].message
-    tool_calls = message.tool_calls or []
+    # Review: let the researcher take a few tool rounds 
+    # (ex: read a doc, then decide to read another or answer) instead of a single round
+    MAX_STEPS = 4 # to avoid an infinite loop
 
-    if not tool_calls:
-        return {"notes": message.content or "", "sources": used}
+    for _ in range(MAX_STEPS):
+        response = complete(system, messages, tools=tools.TOOL_SCHEMA)
+        message = response.choices[0].message
+        tool_calls = message.tool_calls or []
 
-    messages.append(
-        {
-            "role": "assistant",
-            "content": message.content,
-            "tool_calls": [
-                {
-                    "id": call.id,
-                    "type": "function",
-                    "function": {"name": call.function.name, "arguments": call.function.arguments},
-                }
-                for call in tool_calls
-            ],
-        }
-    )
-    for call in tool_calls:
-        try:
-            tool_input = json.loads(call.function.arguments or "{}")
-        except json.JSONDecodeError:
-            tool_input = {}
-        output = _run_tool_call(team, tool_input, used)
-        messages.append({"role": "tool", "tool_call_id": call.id, "content": output})
+        if not tool_calls:
+            return {"notes": message.content or "", "sources": used}
+
+        messages.append(
+            {
+                "role": "assistant",
+                "content": message.content,
+                "tool_calls": [
+                    {
+                        "id": call.id,
+                        "type": "function",
+                        "function": {"name": call.function.name, "arguments": call.function.arguments},
+                    }
+                    for call in tool_calls
+                ],
+            }
+        )
+        for call in tool_calls:
+            try:
+                tool_input = json.loads(call.function.arguments or "{}")
+            except json.JSONDecodeError:
+                tool_input = {}
+            output = _run_tool_call(team, tool_input, used)
+            messages.append({"role": "tool", "tool_call_id": call.id, "content": output})
 
     notes = complete_text(system, messages)
     return {"notes": notes, "sources": used}
