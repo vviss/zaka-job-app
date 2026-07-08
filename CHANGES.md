@@ -68,6 +68,12 @@ The prompt said "answer using your knowledge and the following context", which c
 (it once cited "job_description.md" when asked about the tasks of a new engineer, this file doesn't exist in the data).
 We now give it deterministic sources from previous steps, and we ask it explicitly in the prompt to not rely on its own knowledge as fallback.
 
+**Off-topic questions were answered from the model's own general knowledge.**
+Only the writer was grounded to the context, not the researcher, so for a question that isn't in the docs, the researcher would answer from its own knowledge and the writer would just pass it through.
+I grounded the researcher's prompt the same way (only use the documents, or a web search it actually ran), but it was still stubborn for very well known facts (ex: "what is the capital of France?").
+So for now, I'm conditionally returning a "not found" note (with empty sources) instead of letting the model fill the void.
+Next step is to implement real web search before deciding that the answer is not found.
+
 **Citation sources could include files that were never actually read.**
 The researcher added a file to the sources as soon as the model asked to read it, _before_ the read actually ran.
 So if the model guessed a filename that doesn't exist (but is inside the team folder, so it passes the access check), it still ended up cited even though the read failed.

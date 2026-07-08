@@ -13,7 +13,10 @@ _SYSTEM = (
     "the web to corroborate what you find. When you search the web, include the "
     "relevant details from the documents you have read so the query is well "
     "targeted. When you have enough, write down the facts relevant to the "
-    "question. Be concise."
+    "question. Be concise. "
+    "Important: base your answer only on the team's documents (or a web search you "
+    "actually ran). If neither contains the answer, reply that you could not find "
+    "it in the team's documents - never answer from your own general knowledge."
 )
 
 
@@ -52,6 +55,11 @@ def _run_tool_call(team, tool_input, used):
 
 def research(team, question, steps=None):
     chunks = retrieve(team, question)
+    # Review: if nothing in the docs matched, don't run the model on an empty context 
+    # (it tends to fallback to its own knowledge) 
+    # Instead return a not-found note. (TODO Wissam: replace with web search)
+    if not chunks:
+        return {"notes": "The team's documents don't contain information relevant to this question.", "sources": []}
     system = _SYSTEM.format(team=team)
 
     # Review: include the plan (formatted as a numbered list) in the prompt
