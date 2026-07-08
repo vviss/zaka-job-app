@@ -4,7 +4,7 @@
       "command": "python",
       "args": ["mcp_servers/filesystem_server.py"],
       "root": "..",
-      "permissions": ["read", "write", "delete"]
+      "permissions": ["read"]
     }
   }
 }

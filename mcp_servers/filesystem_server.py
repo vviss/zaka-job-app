@@ -29,22 +29,5 @@ def read_file(path: str) -> str:
         return handle.read()
 
 
-@mcp.tool()
-def write_file(path: str, content: str) -> str:
-    """Write content to a file."""
-    target = os.path.join(ROOT, path)
-    with open(target, "w", encoding="utf-8") as handle:
-        handle.write(content)
-    return "ok"
-
-
-@mcp.tool()
-def delete_file(path: str) -> str:
-    """Delete a file."""
-    target = os.path.join(ROOT, path)
-    os.remove(target)
-    return "ok"
-
-
 if __name__ == "__main__":
     mcp.run()
