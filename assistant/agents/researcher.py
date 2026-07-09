@@ -26,7 +26,6 @@ def _preview(chunks):
     # Review: drop [:120] truncation per chunck because it's giving lots of false negatives
     # (the answers are sometimes in the truncated parts)
     # Not sure of this change because it costs more LLM tokens but I see better results
-    # TODO Wissam: double-check this again later
     return "\n".join("- %s: %s" % (c["source"], c["text"]) for c in chunks)
 
 
@@ -55,11 +54,14 @@ def _run_tool_call(team, tool_input, used):
 
 def research(team, question, steps=None):
     chunks = retrieve(team, question)
-    # Review: if nothing in the docs matched, don't run the model on an empty context 
-    # (it tends to fallback to its own knowledge) 
-    # Instead return a not-found note. (TODO Wissam: replace with web search)
+    # Review: nothing matched in the docs, so we fallback to web search 
+    # If the search also comes back negative: we return a deterministic (hard-coded) not-found note
+    # to avoid answers from the model's own knowledge
     if not chunks:
-        return {"notes": "The team's documents don't contain information relevant to this question.", "sources": []}
+        results = tools.web_search(question)
+        if not results:
+            return {"notes": "I couldn't find anything about this in the team's documents or on the web.", "sources": []}
+        return {"notes": results, "sources": ["web search"]}
     system = _SYSTEM.format(team=team)
 
     # Review: include the plan (formatted as a numbered list) in the prompt

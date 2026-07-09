@@ -1,6 +1,5 @@
-import httpx
+from ddgs import DDGS
 
-from config import SEARCH_API_KEY, SEARCH_ENDPOINT
 from assistant import mcp_client
 
 TOOL_SCHEMA = [
@@ -28,20 +27,15 @@ TOOL_SCHEMA = [
 ]
 
 
-# Review: simple error handling for web search failure
-# so that the researcher doesn't crash the app if the search request fails
-# (especially now that I haven't implemented a real search service yet)
+# Review: using duckduckgo instead of a raw http call for the web search
 def web_search(query):
     try:
-        response = httpx.post(
-            SEARCH_ENDPOINT,
-            headers={"Authorization": "Bearer %s" % SEARCH_API_KEY},
-            json={"q": query},
-            timeout=30.0,
-        )
-        return response.text
-    except httpx.HTTPError as exc:
-        return "web search failed: %s" % exc
+        results = DDGS().text(query, max_results=5)
+    except Exception:
+        return ""
+    return "\n".join(
+        "- %s: %s (%s)" % (r["title"], r["body"], r["href"]) for r in results
+    )
 
 
 def run_tool(tool_input):
@@ -57,5 +51,6 @@ def run_tool(tool_input):
     # They are destructive actions (security risk)
     # and anyway not useful for the purpose of this app
     if action == "web_search":
-        return web_search(args.get("query", ""))
+        # Review: clear message for the model when the search came back empty
+        return web_search(args.get("query", "")) or "no web results found"
     return "unknown action"

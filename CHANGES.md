@@ -71,8 +71,7 @@ We now give it deterministic sources from previous steps, and we ask it explicit
 **Off-topic questions were answered from the model's own general knowledge.**
 Only the writer was grounded to the context, not the researcher, so for a question that isn't in the docs, the researcher would answer from its own knowledge and the writer would just pass it through.
 I grounded the researcher's prompt the same way (only use the documents, or a web search it actually ran), but it was still stubborn for very well known facts (ex: "what is the capital of France?").
-So for now, I'm conditionally returning a "not found" note (with empty sources) instead of letting the model fill the void.
-Next step is to implement real web search before deciding that the answer is not found.
+So when nothing matches in the docs, instead of letting the model fill the void from its own knowledge, I fallback to a web search.
 
 **Citation sources could include files that were never actually read.**
 The researcher added a file to the sources as soon as the model asked to read it, _before_ the read actually ran.
@@ -95,9 +94,11 @@ Made it a bounded loop (with max steps to avoid excessive thinking, latency, tok
 Both the model-call retry and the JSON-parse retry were `while True`. A bad API key or a recurring non-JSON reply would loop forever.
 Set a max retries variable for both.
 
-**Web search crashed the pipeline.**
-`web_search` had no error handling and the endpoint is a dummy placeholder, so any call crashed the researcher.
-Wrapped it with a 'try' statement so it returns a message instead of crashing.
+**Web search was a dummy endpoint (always crashed).**
+It pointed at a placeholder URL with no error handling, so it never worked and any call crashed the researcher.
+Wired it to DuckDuckGo (free, no api key) and wrapped it in a 'try/except' block.
+It returns an empty string when nothing comes back, so I use it as the fallback when the docs have nothing
+When the web search doesn't return anything, I don't go through the LLM at all and instead I return a hard-coded 'not-found' note to avoid having to convince the model not to use its own knowledge to answer the question (plus save an LLM call).
 
 ## Performance
 
